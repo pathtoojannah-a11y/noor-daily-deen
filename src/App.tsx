@@ -12,6 +12,8 @@ import Wake from "./pages/Wake";
 import Bedtime from "./pages/Bedtime";
 import Adhkar from "./pages/Adhkar";
 import AdhkarCategory from "./pages/AdhkarCategory";
+import Hadith from "./pages/Hadith";
+import HadithBook from "./pages/HadithBook";
 import Notifications from "./pages/Notifications";
 import NotFound from "./pages/NotFound";
 
@@ -33,6 +35,8 @@ const App = () => (
         <Route path="/bedtime" element={<Bedtime />} />
         <Route path="/adhkar" element={<Adhkar />} />
         <Route path="/adhkar/:slug" element={<AdhkarCategory />} />
+        <Route path="/hadith" element={<Hadith />} />
+        <Route path="/hadith/:bookId" element={<HadithBook />} />
         <Route path="/notifications" element={<Notifications />} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
