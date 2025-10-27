@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowLeft, BookOpen } from 'lucide-react';
-import { fallbackHadiths } from '@/lib/api/hadith';
+import { getHadithFromChapter } from '@/lib/api/hadith';
 import type { HadithData } from '@/lib/api/hadith';
 import { getBookMetadata } from '@/lib/api/hadithMetadata';
 
@@ -18,10 +18,14 @@ const HadithBook = () => {
   const chapter = bookMetadata?.chapters.find(c => c.number === Number(chapterId));
 
   useEffect(() => {
-    // For now, show fallback hadiths as examples
-    // In future, this will fetch from the actual chapter JSON files
-    setHadiths(fallbackHadiths);
-    setIsLoading(false);
+    async function load() {
+      if (bookId && chapterId) {
+        const list = await getHadithFromChapter(bookId, Number(chapterId));
+        setHadiths(list);
+      }
+      setIsLoading(false);
+    }
+    load();
   }, [bookId, chapterId]);
 
   if (isLoading) {
@@ -96,15 +100,6 @@ const HadithBook = () => {
           ))}
         </div>
 
-        <Card className="border-2 border-dashed">
-          <CardContent className="p-6 text-center text-sm text-muted-foreground">
-            <p>
-              Full chapter hadiths will be loaded from the JSON files once the data is properly set up.
-              <br />
-              These are example hadiths for now.
-            </p>
-          </CardContent>
-        </Card>
       </div>
     </Layout>
   );

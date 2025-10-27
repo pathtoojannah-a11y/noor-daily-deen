@@ -28,6 +28,20 @@ const HADITH_BOOKS = [
   'ibnmajah', 'malik', 'ahmad', 'darimi'
 ];
 
+// Helper: try local JSON first, then fallback to CDN (GitHub via jsDelivr)
+const cdnBase = 'https://cdn.jsdelivr.net/gh/ahmedbaset/hadith-json@main/db';
+async function fetchWithFallback(path: string) {
+  // path example: /by_book/the_9_books/bukhari.json
+  const localUrl = `/hadith${path}`;
+  const cdnUrl = `${cdnBase}${path}`;
+  let res = await fetch(localUrl);
+  if (!res.ok) {
+    res = await fetch(cdnUrl);
+  }
+  if (!res.ok) throw new Error(`Failed to fetch ${path}`);
+  return res.json();
+}
+
 // Fetch random hadith from available books
 export async function getDailyHadith(): Promise<HadithData> {
   try {
@@ -35,13 +49,7 @@ export async function getDailyHadith(): Promise<HadithData> {
     const randomBook = HADITH_BOOKS[Math.floor(Math.random() * HADITH_BOOKS.length)];
     
     // Fetch the book data
-    const response = await fetch(`/hadith/by_book/the_9_books/${randomBook}.json`);
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch hadith');
-    }
-    
-    const bookData: HadithBook = await response.json();
+    const bookData: HadithBook = await fetchWithFallback(`/by_book/the_9_books/${randomBook}.json`);
     
     // Pick a random hadith from the book
     const randomIndex = Math.floor(Math.random() * bookData.hadiths.length);
@@ -63,13 +71,7 @@ export async function getDailyHadith(): Promise<HadithData> {
 // Fetch hadith from specific book
 export async function getHadithFromBook(bookName: string): Promise<HadithData[]> {
   try {
-    const response = await fetch(`/hadith/by_book/the_9_books/${bookName}.json`);
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch hadith book');
-    }
-    
-    const bookData: HadithBook = await response.json();
+    const bookData: HadithBook = await fetchWithFallback(`/by_book/the_9_books/${bookName}.json`);
     
     return bookData.hadiths.map(h => ({
       text: h.text,
@@ -86,13 +88,7 @@ export async function getHadithFromBook(bookName: string): Promise<HadithData[]>
 // Fetch hadith from specific chapter
 export async function getHadithFromChapter(bookName: string, chapterId: number): Promise<HadithData[]> {
   try {
-    const response = await fetch(`/hadith/by_chapter/the_9_books/${bookName}/${chapterId}.json`);
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch hadith chapter');
-    }
-    
-    const bookData: HadithBook = await response.json();
+    const bookData: HadithBook = await fetchWithFallback(`/by_chapter/the_9_books/${bookName}/${chapterId}.json`);
     
     return bookData.hadiths.map(h => ({
       text: h.text,
