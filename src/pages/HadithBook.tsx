@@ -5,43 +5,24 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowLeft, BookOpen } from 'lucide-react';
-import { getHadithFromBook } from '@/lib/api/hadith';
+import { fallbackHadiths } from '@/lib/api/hadith';
 import type { HadithData } from '@/lib/api/hadith';
-
-const bookNames: Record<string, string> = {
-  bukhari: 'Sahih al-Bukhari',
-  muslim: 'Sahih Muslim',
-  abudawud: 'Sunan Abi Dawud',
-  tirmidhi: 'Jami\' at-Tirmidhi',
-  nasai: 'Sunan an-Nasa\'i',
-  ibnmajah: 'Sunan Ibn Majah',
-  malik: 'Muwatta Malik',
-  ahmad: 'Musnad Ahmad',
-  darimi: 'Sunan ad-Darimi'
-};
+import { getBookMetadata } from '@/lib/api/hadithMetadata';
 
 const HadithBook = () => {
-  const { bookId } = useParams<{ bookId: string }>();
+  const { bookId, chapterId } = useParams<{ bookId: string; chapterId: string }>();
   const navigate = useNavigate();
   const [hadiths, setHadiths] = useState<HadithData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [displayCount, setDisplayCount] = useState(20);
+  const bookMetadata = bookId ? getBookMetadata(bookId) : undefined;
+  const chapter = bookMetadata?.chapters.find(c => c.number === Number(chapterId));
 
   useEffect(() => {
-    if (bookId) {
-      loadHadiths(bookId);
-    }
-  }, [bookId]);
-
-  const loadHadiths = async (book: string) => {
-    const hadithList = await getHadithFromBook(book);
-    setHadiths(hadithList);
+    // For now, show fallback hadiths as examples
+    // In future, this will fetch from the actual chapter JSON files
+    setHadiths(fallbackHadiths);
     setIsLoading(false);
-  };
-
-  const loadMore = () => {
-    setDisplayCount(prev => prev + 20);
-  };
+  }, [bookId, chapterId]);
 
   if (isLoading) {
     return (
@@ -61,20 +42,29 @@ const HadithBook = () => {
       <div className="max-w-3xl mx-auto space-y-6 pb-24">
         <Button
           variant="ghost"
-          onClick={() => navigate('/hadith')}
+          onClick={() => navigate(`/hadith/${bookId}`)}
           className="mb-4"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Collections
+          Back to Chapters
         </Button>
 
         <div className="space-y-2">
-          <h1 className="text-3xl font-bold">{bookId ? bookNames[bookId] : 'Hadith Book'}</h1>
-          <p className="text-muted-foreground">{hadiths.length} hadiths</p>
+          {chapter ? (
+            <>
+              <h1 className="text-3xl font-bold">{chapter.name}</h1>
+              <p className="text-xl font-arabic text-muted-foreground">{chapter.arabic}</p>
+              <p className="text-sm text-muted-foreground">
+                {bookMetadata?.name} • Chapter {chapter.number} • {chapter.hadithRange}
+              </p>
+            </>
+          ) : (
+            <h1 className="text-3xl font-bold">Hadiths</h1>
+          )}
         </div>
 
         <div className="space-y-4">
-          {hadiths.slice(0, displayCount).map((hadith, index) => (
+          {hadiths.map((hadith, index) => (
             <Card key={index} className="border-2">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
@@ -86,31 +76,35 @@ const HadithBook = () => {
                 <div className="space-y-3">
                   <p className="text-base leading-relaxed">{hadith.text}</p>
                   
-                  <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-                    {hadith.chapter && (
-                      <span className="bg-secondary/20 rounded px-2 py-1">
-                        {hadith.chapter}
-                      </span>
-                    )}
-                    {hadith.reference && (
-                      <span className="bg-secondary/20 rounded px-2 py-1">
-                        {hadith.reference}
-                      </span>
-                    )}
-                  </div>
+                  {(hadith.chapter || hadith.reference) && (
+                    <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                      {hadith.chapter && (
+                        <span className="bg-secondary/20 rounded px-2 py-1">
+                          {hadith.chapter}
+                        </span>
+                      )}
+                      {hadith.reference && (
+                        <span className="bg-secondary/20 rounded px-2 py-1">
+                          {hadith.reference}
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
 
-        {displayCount < hadiths.length && (
-          <div className="flex justify-center">
-            <Button onClick={loadMore} variant="outline">
-              Load More Hadiths ({hadiths.length - displayCount} remaining)
-            </Button>
-          </div>
-        )}
+        <Card className="border-2 border-dashed">
+          <CardContent className="p-6 text-center text-sm text-muted-foreground">
+            <p>
+              Full chapter hadiths will be loaded from the JSON files once the data is properly set up.
+              <br />
+              These are example hadiths for now.
+            </p>
+          </CardContent>
+        </Card>
       </div>
     </Layout>
   );
