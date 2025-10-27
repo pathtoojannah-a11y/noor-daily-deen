@@ -1,13 +1,109 @@
 export interface HadithData {
   text: string;
   source: string;
+  reference?: string;
+  chapter?: string;
 }
 
-export async function getDailyHadith(): Promise<HadithData> {
-  return {
-    text: "",
-    source: ""
+interface HadithBook {
+  metadata: {
+    name: string;
+    section: string[];
   };
+  hadiths: Array<{
+    hadithnumber: number;
+    arabicnumber: string;
+    text: string;
+    grades: Array<{ name: string; grade: string }>;
+    reference?: {
+      book: number;
+      hadith: number;
+    };
+  }>;
+}
+
+// List of available hadith books
+const HADITH_BOOKS = [
+  'bukhari', 'muslim', 'abudawud', 'tirmidhi', 'nasai', 
+  'ibnmajah', 'malik', 'ahmad', 'darimi'
+];
+
+// Fetch random hadith from available books
+export async function getDailyHadith(): Promise<HadithData> {
+  try {
+    // Pick a random book
+    const randomBook = HADITH_BOOKS[Math.floor(Math.random() * HADITH_BOOKS.length)];
+    
+    // Fetch the book data
+    const response = await fetch(`/hadith/by_book/the_9_books/${randomBook}.json`);
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch hadith');
+    }
+    
+    const bookData: HadithBook = await response.json();
+    
+    // Pick a random hadith from the book
+    const randomIndex = Math.floor(Math.random() * bookData.hadiths.length);
+    const hadith = bookData.hadiths[randomIndex];
+    
+    return {
+      text: hadith.text,
+      source: `${bookData.metadata.name} ${hadith.arabicnumber}`,
+      reference: hadith.reference ? `Book ${hadith.reference.book}, Hadith ${hadith.reference.hadith}` : undefined,
+      chapter: bookData.metadata.section?.[0]
+    };
+  } catch (error) {
+    console.error('Error fetching hadith:', error);
+    // Return a fallback hadith
+    return fallbackHadiths[Math.floor(Math.random() * fallbackHadiths.length)];
+  }
+}
+
+// Fetch hadith from specific book
+export async function getHadithFromBook(bookName: string): Promise<HadithData[]> {
+  try {
+    const response = await fetch(`/hadith/by_book/the_9_books/${bookName}.json`);
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch hadith book');
+    }
+    
+    const bookData: HadithBook = await response.json();
+    
+    return bookData.hadiths.map(h => ({
+      text: h.text,
+      source: `${bookData.metadata.name} ${h.arabicnumber}`,
+      reference: h.reference ? `Book ${h.reference.book}, Hadith ${h.reference.hadith}` : undefined,
+      chapter: bookData.metadata.section?.[0]
+    }));
+  } catch (error) {
+    console.error('Error fetching hadith book:', error);
+    return [];
+  }
+}
+
+// Fetch hadith from specific chapter
+export async function getHadithFromChapter(bookName: string, chapterId: number): Promise<HadithData[]> {
+  try {
+    const response = await fetch(`/hadith/by_chapter/the_9_books/${bookName}/${chapterId}.json`);
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch hadith chapter');
+    }
+    
+    const bookData: HadithBook = await response.json();
+    
+    return bookData.hadiths.map(h => ({
+      text: h.text,
+      source: `${bookData.metadata.name} ${h.arabicnumber}`,
+      reference: h.reference ? `Book ${h.reference.book}, Hadith ${h.reference.hadith}` : undefined,
+      chapter: bookData.metadata.section?.[0]
+    }));
+  } catch (error) {
+    console.error('Error fetching hadith chapter:', error);
+    return [];
+  }
 }
 
 export const fallbackHadiths: HadithData[] = [
