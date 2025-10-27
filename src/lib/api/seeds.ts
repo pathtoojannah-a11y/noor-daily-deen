@@ -2,18 +2,18 @@
 import type { Category, Dua } from './adhkar';
 
 export const seedCategories: Category[] = [
-  { slug: 'morning', name: 'Morning Adhkār', count: 8, icon: '🌅' },
-  { slug: 'evening', name: 'Evening Adhkār', count: 7, icon: '🌆' },
-  { slug: 'bedtime', name: 'Bedtime Adhkār', count: 6, icon: '🌙' },
-  { slug: 'prayer', name: 'Prayer', count: 5, icon: '🤲' },
-  { slug: 'praising-allah', name: 'Praising Allah', count: 4, icon: '✨' },
-  { slug: 'travel', name: 'Travel', count: 3, icon: '✈️' },
-  { slug: 'joy-distress', name: 'Joy & Distress', count: 4, icon: '💚' },
-  { slug: 'nature', name: 'Nature', count: 3, icon: '🌿' },
-  { slug: 'home-family', name: 'Home & Family', count: 5, icon: '🏡' },
-  { slug: 'good-etiquette', name: 'Good Etiquette', count: 4, icon: '🤝' },
-  { slug: 'food-drink', name: 'Food & Drink', count: 3, icon: '🍽️' },
-  { slug: 'sickness-death', name: 'Sickness & Death', count: 3, icon: '🩺' },
+  { slug: 'morning', name: 'Morning Adhkār', count: 2, icon: '🌅' },
+  { slug: 'evening', name: 'Evening Adhkār', count: 1, icon: '🌆' },
+  { slug: 'bedtime', name: 'Bedtime Adhkār', count: 3, icon: '🌙' },
+  { slug: 'prayer', name: 'Prayer', count: 1, icon: '🤲' },
+  { slug: 'praising-allah', name: 'Praising Allah', count: 1, icon: '✨' },
+  { slug: 'travel', name: 'Travel', count: 1, icon: '✈️' },
+  { slug: 'joy-distress', name: 'Joy & Distress', count: 1, icon: '💚' },
+  { slug: 'nature', name: 'Nature', count: 1, icon: '🌿' },
+  { slug: 'home-family', name: 'Home & Family', count: 1, icon: '🏡' },
+  { slug: 'good-etiquette', name: 'Good Etiquette', count: 1, icon: '🤝' },
+  { slug: 'food-drink', name: 'Food & Drink', count: 1, icon: '🍽️' },
+  { slug: 'sickness-death', name: 'Sickness & Death', count: 1, icon: '🩺' },
 ];
 
 export const seedDuas: Record<string, Dua[]> = {

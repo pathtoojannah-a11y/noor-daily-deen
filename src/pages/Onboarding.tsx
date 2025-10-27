@@ -42,7 +42,7 @@ const Onboarding = () => {
         time: d.time,
         days: [0, 1, 2, 3, 4, 5, 6],
         payload: {
-          cards: { ayah: true, hadith: true, dua: true, dhikr: true, reflection: true },
+          cards: { ayah: true, hadith: true, dua: true, dhikr: true },
           category: d.category,
           dhikrTarget: d.dhikrTarget,
         },
@@ -52,29 +52,9 @@ const Onboarding = () => {
       const { error: remindersError } = await supabase.from('reminders').insert(reminders);
       if (remindersError) throw remindersError;
 
-      // Create default alarms
-      const defaultAlarms = [
-        { name: 'Wake Up', type: 'wake', time: '06:00:00' },
-        { name: 'Bedtime', type: 'bedtime', time: '22:00:00' },
-      ];
-
-      const alarms = defaultAlarms.map(a => ({
-        user_id: userId,
-        name: a.name,
-        type: a.type,
-        time: a.time,
-        days: [0, 1, 2, 3, 4, 5, 6],
-        tone: 'chime',
-        volume: 70,
-        enabled: true,
-      }));
-
-      const { error: alarmsError } = await supabase.from('alarms').insert(alarms);
-      if (alarmsError) throw alarmsError;
-
       toast({
         title: "All set!",
-        description: "Your daily reminders and alarms are configured.",
+        description: "Your notification times are configured.",
       });
 
       navigate('/today');
@@ -105,22 +85,22 @@ const Onboarding = () => {
             <div className="flex items-start gap-3">
               <Bell className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
               <div>
-                <p className="font-medium text-foreground">Daily Reminders</p>
-                <p>Gentle notifications for morning, midday, evening, and bedtime spiritual moments.</p>
+                <p className="font-medium text-foreground">Gentle Notifications</p>
+                <p>Receive quiet reminders for morning, midday, evening, and night spiritual moments.</p>
               </div>
             </div>
             <div className="flex items-start gap-3">
               <Clock className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
               <div>
-                <p className="font-medium text-foreground">Wake & Bedtime Alarms</p>
-                <p>Start and end your day with duʿāʾ and dhikr routines.</p>
+                <p className="font-medium text-foreground">Daily Content</p>
+                <p>Each reminder shows you a verse, hadith, or duʿāʾ to keep you connected to Allah.</p>
               </div>
             </div>
           </div>
 
           <div className="bg-secondary/20 rounded-lg p-4 text-sm text-center">
             <p className="text-muted-foreground">
-              We'll create default reminders for you. You can customize everything in the Alarms page later.
+              We'll create default notification times for you. You can customize everything later.
             </p>
           </div>
           

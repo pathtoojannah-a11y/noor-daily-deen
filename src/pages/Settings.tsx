@@ -13,16 +13,16 @@ const Settings = () => {
 
         <Card 
           className="border-2 cursor-pointer hover:border-primary transition-colors"
-          onClick={() => navigate('/alarms')}
+          onClick={() => navigate('/notifications')}
         >
           <CardHeader>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Bell className="w-5 h-5 text-primary" />
                 <div>
-                  <CardTitle>Alarms & Reminders</CardTitle>
+                  <CardTitle>Notification Times</CardTitle>
                   <CardDescription>
-                    Manage your wake alarms, reminders, and bedtime routines
+                    Set when you'd like gentle Islamic reminders throughout your day
                   </CardDescription>
                 </div>
               </div>

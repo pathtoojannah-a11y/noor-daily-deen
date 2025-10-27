@@ -25,10 +25,9 @@ export const Layout = ({ children }: LayoutProps) => {
 
   const navItems = [
     { path: '/today', icon: Home, label: 'Today' },
-    { path: '/alarms', icon: Bell, label: 'Alarms' },
+    { path: '/notifications', icon: Bell, label: 'Times' },
     { path: '/dashboard', icon: BarChart3, label: 'Dashboard' },
     { path: '/adhkar', icon: Book, label: 'Adhkār' },
-    { path: '/reflections', icon: BookText, label: 'Reflections' },
     { path: '/settings', icon: Settings, label: 'Settings' },
   ];
 

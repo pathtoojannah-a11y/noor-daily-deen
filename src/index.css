@@ -8,9 +8,14 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Islamic-inspired color palette */
-    --background: 42 45% 96%;
+    /* Islamic-inspired color palette with geometric pattern */
+    --background: 160 35% 94%;
     --foreground: 28 25% 20%;
+    
+    /* Subtle Islamic pattern overlay */
+    background-image: 
+      repeating-linear-gradient(45deg, transparent, transparent 35px, hsl(180 65% 35% / 0.02) 35px, hsl(180 65% 35% / 0.02) 70px),
+      repeating-linear-gradient(-45deg, transparent, transparent 35px, hsl(180 65% 35% / 0.02) 35px, hsl(180 65% 35% / 0.02) 70px);
 
     --card: 0 0% 100%;
     --card-foreground: 28 25% 20%;
@@ -62,9 +67,13 @@ All colors MUST be HSL.
   }
 
   .dark {
-    /* Deep navy background for dark mode */
+    /* Deep navy background for dark mode with Islamic pattern */
     --background: 220 40% 8%;
     --foreground: 42 35% 92%;
+    
+    background-image: 
+      repeating-linear-gradient(45deg, transparent, transparent 40px, hsl(180 75% 45% / 0.03) 40px, hsl(180 75% 45% / 0.03) 80px),
+      repeating-linear-gradient(-45deg, transparent, transparent 40px, hsl(180 75% 45% / 0.03) 40px, hsl(180 75% 45% / 0.03) 80px);
 
     --card: 220 35% 12%;
     --card-foreground: 42 35% 92%;
