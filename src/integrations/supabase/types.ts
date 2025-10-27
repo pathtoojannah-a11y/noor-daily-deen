@@ -14,6 +14,75 @@ export type Database = {
   }
   public: {
     Tables: {
+      adhkar_preferences: {
+        Row: {
+          bedtime_category: string | null
+          created_at: string | null
+          dhikr_targets: Json | null
+          evening_category: string | null
+          id: string
+          morning_category: string | null
+          user_id: string
+        }
+        Insert: {
+          bedtime_category?: string | null
+          created_at?: string | null
+          dhikr_targets?: Json | null
+          evening_category?: string | null
+          id?: string
+          morning_category?: string | null
+          user_id: string
+        }
+        Update: {
+          bedtime_category?: string | null
+          created_at?: string | null
+          dhikr_targets?: Json | null
+          evening_category?: string | null
+          id?: string
+          morning_category?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      alarms: {
+        Row: {
+          created_at: string | null
+          days: number[] | null
+          enabled: boolean | null
+          id: string
+          name: string
+          time: string
+          tone: string | null
+          type: string
+          user_id: string
+          volume: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          days?: number[] | null
+          enabled?: boolean | null
+          id?: string
+          name: string
+          time: string
+          tone?: string | null
+          type: string
+          user_id: string
+          volume?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          days?: number[] | null
+          enabled?: boolean | null
+          id?: string
+          name?: string
+          time?: string
+          tone?: string | null
+          type?: string
+          user_id?: string
+          volume?: number | null
+        }
+        Relationships: []
+      }
       daily_selection: {
         Row: {
           ayah: Json | null
@@ -103,33 +172,42 @@ export type Database = {
           bedtime: string | null
           cards: Json | null
           created_at: string | null
+          days: number[] | null
           enabled: boolean | null
           evening: string | null
           id: string
+          label: string | null
           midday: string | null
           morning: string | null
+          time: string | null
           user_id: string
         }
         Insert: {
           bedtime?: string | null
           cards?: Json | null
           created_at?: string | null
+          days?: number[] | null
           enabled?: boolean | null
           evening?: string | null
           id?: string
+          label?: string | null
           midday?: string | null
           morning?: string | null
+          time?: string | null
           user_id: string
         }
         Update: {
           bedtime?: string | null
           cards?: Json | null
           created_at?: string | null
+          days?: number[] | null
           enabled?: boolean | null
           evening?: string | null
           id?: string
+          label?: string | null
           midday?: string | null
           morning?: string | null
+          time?: string | null
           user_id?: string
         }
         Relationships: []

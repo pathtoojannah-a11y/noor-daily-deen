@@ -7,9 +7,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { Save } from 'lucide-react';
+import { Save, Bell } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const Settings = () => {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -106,6 +108,21 @@ const Settings = () => {
     <Layout>
       <div className="max-w-2xl mx-auto space-y-6 pb-24">
         <h1 className="text-3xl font-bold">Settings</h1>
+
+        <Card 
+          className="border-2 cursor-pointer hover:border-primary transition-colors"
+          onClick={() => navigate('/settings/reminders')}
+        >
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Bell className="w-5 h-5" />
+              Alarms & Reminders
+            </CardTitle>
+            <CardDescription>
+              Manage your wake alarms, reminders, and bedtime routines
+            </CardDescription>
+          </CardHeader>
+        </Card>
 
         <Card className="border-2">
           <CardHeader>
