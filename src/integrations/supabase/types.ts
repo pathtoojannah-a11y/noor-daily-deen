@@ -14,7 +14,168 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      daily_selection: {
+        Row: {
+          ayah: Json | null
+          created_at: string | null
+          date: string
+          dhikr: Json | null
+          dua: Json | null
+          hadith: Json | null
+          id: string
+          reflection_prompt: string | null
+          user_id: string
+        }
+        Insert: {
+          ayah?: Json | null
+          created_at?: string | null
+          date: string
+          dhikr?: Json | null
+          dua?: Json | null
+          hadith?: Json | null
+          id?: string
+          reflection_prompt?: string | null
+          user_id: string
+        }
+        Update: {
+          ayah?: Json | null
+          created_at?: string | null
+          date?: string
+          dhikr?: Json | null
+          dua?: Json | null
+          hadith?: Json | null
+          id?: string
+          reflection_prompt?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          id: string
+          tz: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          id: string
+          tz?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          tz?: string | null
+        }
+        Relationships: []
+      }
+      reflections: {
+        Row: {
+          created_at: string | null
+          date: string
+          id: string
+          text: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          date: string
+          id?: string
+          text: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          date?: string
+          id?: string
+          text?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      reminder_settings: {
+        Row: {
+          bedtime: string | null
+          cards: Json | null
+          created_at: string | null
+          enabled: boolean | null
+          evening: string | null
+          id: string
+          midday: string | null
+          morning: string | null
+          user_id: string
+        }
+        Insert: {
+          bedtime?: string | null
+          cards?: Json | null
+          created_at?: string | null
+          enabled?: boolean | null
+          evening?: string | null
+          id?: string
+          midday?: string | null
+          morning?: string | null
+          user_id: string
+        }
+        Update: {
+          bedtime?: string | null
+          cards?: Json | null
+          created_at?: string | null
+          enabled?: boolean | null
+          evening?: string | null
+          id?: string
+          midday?: string | null
+          morning?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_progress: {
+        Row: {
+          ayah_done: boolean | null
+          created_at: string | null
+          date: string
+          dhikr_count: number | null
+          dhikr_done: boolean | null
+          dua_done: boolean | null
+          hadith_done: boolean | null
+          id: string
+          reflection_done: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          ayah_done?: boolean | null
+          created_at?: string | null
+          date: string
+          dhikr_count?: number | null
+          dhikr_done?: boolean | null
+          dua_done?: boolean | null
+          hadith_done?: boolean | null
+          id?: string
+          reflection_done?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          ayah_done?: boolean | null
+          created_at?: string | null
+          date?: string
+          dhikr_count?: number | null
+          dhikr_done?: boolean | null
+          dua_done?: boolean | null
+          hadith_done?: boolean | null
+          id?: string
+          reflection_done?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
