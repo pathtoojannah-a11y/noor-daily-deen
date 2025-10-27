@@ -23,6 +23,10 @@ export async function listCategories(): Promise<Category[]> {
     const res = await fetch(`${BASE}/api/categories`);
     const json = await res.json();
     const arr = json.categories ?? json.data ?? [];
+    if (arr.length === 0) {
+      const { seedCategories } = await import('./seeds');
+      return seedCategories;
+    }
     return arr.map((c: any) => ({
       slug: c.slug || c.id || c.name?.toLowerCase()?.replace(/\s+/g, '-') || 'unknown',
       name: c.name || c.title || 'Category',
@@ -31,7 +35,8 @@ export async function listCategories(): Promise<Category[]> {
     }));
   } catch (error) {
     console.error('Error fetching categories:', error);
-    return [];
+    const { seedCategories } = await import('./seeds');
+    return seedCategories;
   }
 }
 
@@ -40,6 +45,10 @@ export async function getDuasByCategory(slug: string): Promise<Dua[]> {
     const res = await fetch(`${BASE}/api/duas?category=${encodeURIComponent(slug)}`);
     const json = await res.json();
     const arr = json.duas ?? json.data ?? [];
+    if (arr.length === 0) {
+      const { seedDuas } = await import('./seeds');
+      return seedDuas[slug] || [];
+    }
     return arr.map((d: any) => ({
       id: d.id ?? d.slug ?? crypto.randomUUID(),
       title: d.title ?? d.name ?? '',
@@ -52,7 +61,8 @@ export async function getDuasByCategory(slug: string): Promise<Dua[]> {
     }));
   } catch (error) {
     console.error('Error fetching duas:', error);
-    return [];
+    const { seedDuas } = await import('./seeds');
+    return seedDuas[slug] || [];
   }
 }
 

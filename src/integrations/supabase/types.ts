@@ -167,47 +167,35 @@ export type Database = {
         }
         Relationships: []
       }
-      reminder_settings: {
+      reminders: {
         Row: {
-          bedtime: string | null
-          cards: Json | null
           created_at: string | null
           days: number[] | null
           enabled: boolean | null
-          evening: string | null
           id: string
-          label: string | null
-          midday: string | null
-          morning: string | null
-          time: string | null
+          label: string
+          payload: Json | null
+          time: string
           user_id: string
         }
         Insert: {
-          bedtime?: string | null
-          cards?: Json | null
           created_at?: string | null
           days?: number[] | null
           enabled?: boolean | null
-          evening?: string | null
           id?: string
-          label?: string | null
-          midday?: string | null
-          morning?: string | null
-          time?: string | null
+          label: string
+          payload?: Json | null
+          time: string
           user_id: string
         }
         Update: {
-          bedtime?: string | null
-          cards?: Json | null
           created_at?: string | null
           days?: number[] | null
           enabled?: boolean | null
-          evening?: string | null
           id?: string
-          label?: string | null
-          midday?: string | null
-          morning?: string | null
-          time?: string | null
+          label?: string
+          payload?: Json | null
+          time?: string
           user_id?: string
         }
         Relationships: []
