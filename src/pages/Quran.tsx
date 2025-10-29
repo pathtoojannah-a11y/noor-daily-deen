@@ -68,13 +68,17 @@ const Quran = () => {
             <CardContent className="space-y-6">
               {selectedSurah.ayahs?.map((ayah: any, index: number) => (
                 <div key={index} className="space-y-3 p-4 bg-muted/30 rounded-lg">
-                  <div className="font-arabic text-2xl text-right leading-loose">
-                    {ayah.arabic || ayah.text_ar} ﴿{ayah.numberInSurah}﴾
+                  <div className="font-arabic text-2xl text-right leading-loose whitespace-pre-wrap">
+                    {ayah.text || ayah.arabic || ayah.text_ar} ﴿{ayah.numberInSurah}﴾
                   </div>
-                  <div className="text-muted-foreground italic">
-                    {ayah.transliteration}
-                  </div>
-                  <div>{ayah.text || ayah.translation}</div>
+                  {ayah.transliteration && (
+                    <div className="text-muted-foreground italic whitespace-pre-wrap">
+                      {ayah.transliteration}
+                    </div>
+                  )}
+                  {ayah.translation && (
+                    <div className="leading-relaxed whitespace-pre-wrap">{ayah.translation}</div>
+                  )}
                   {ayah.audioUrl && (
                     <Button
                       size="sm"

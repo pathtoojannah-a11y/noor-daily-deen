@@ -76,13 +76,23 @@ const HadithBook = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-3">
-                  <p className="text-base leading-relaxed">{hadith.text}</p>
+                  {hadith.arabic && (
+                    <p className="font-arabic text-xl text-right leading-relaxed whitespace-pre-wrap">
+                      {hadith.arabic}
+                    </p>
+                  )}
+                  <p className="text-base leading-relaxed whitespace-pre-wrap">{hadith.text}</p>
                   
-                  {(hadith.chapter || hadith.reference) && (
+                  {(hadith.chapter || hadith.reference || hadith.hadithNumber) && (
                     <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
                       {hadith.chapter && (
                         <span className="bg-secondary/20 rounded px-2 py-1">
-                          {hadith.chapter}
+                          Chapter {hadith.chapter}
+                        </span>
+                      )}
+                      {hadith.hadithNumber && (
+                        <span className="bg-secondary/20 rounded px-2 py-1">
+                          #{hadith.hadithNumber}
                         </span>
                       )}
                       {hadith.reference && (

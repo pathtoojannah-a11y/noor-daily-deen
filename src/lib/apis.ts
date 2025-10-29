@@ -9,7 +9,7 @@ const DUA_BASE = import.meta.env.VITE_DUA_API_BASE || 'https://dua-dhikr-two.ver
 
 // Generic JSON fetcher with error handling
 async function getJSON<T>(url: string): Promise<T> {
-  const r = await fetch(url);
+  const r = await fetch(url, { headers: { "accept": "application/json" } });
   if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
   return r.json();
 }
@@ -59,12 +59,12 @@ export async function searchHadith(q: Record<string, string | number | undefined
   
   try {
     const res = await getJSON<any>(`${HADITH_BASE}/hadiths?${params}`);
-    // Handle pagination wrapper
+    // Handle pagination wrapper: { hadiths: { data: [...], ...pagination } }
     let arr: any[] = [];
-    if (Array.isArray(res?.hadiths)) {
-      arr = res.hadiths;
-    } else if (res?.hadiths && Array.isArray(res.hadiths.data)) {
+    if (Array.isArray(res?.hadiths?.data)) {
       arr = res.hadiths.data;
+    } else if (Array.isArray(res?.hadiths)) {
+      arr = res.hadiths;
     }
     return arr;
   } catch {
@@ -72,10 +72,10 @@ export async function searchHadith(q: Record<string, string | number | undefined
       const data = await getJSON<any>(
         `${HADITH_STATIC}/${q.book}/chapters/${q.chapter}`
       );
-      if (Array.isArray(data.hadiths)) {
-        return data.hadiths;
-      } else if (data.hadiths && Array.isArray(data.hadiths.data)) {
+      if (Array.isArray(data.hadiths?.data)) {
         return data.hadiths.data;
+      } else if (Array.isArray(data.hadiths)) {
+        return data.hadiths;
       }
       return [];
     }
@@ -108,11 +108,11 @@ export async function getHadithFromChapter(bookId: string, chapterId: number): P
   try {
     const data = await searchHadith({ book: bookId, chapter: chapterId });
     return data.map((h: any) => ({
-      text: h.hadith || h.hadithEnglish || h.text || '',
+      text: h.hadithEnglish || h.hadith || h.text || '',
       arabic: h.hadithArabic || h.arabic,
-      source: h.book || bookId,
+      source: h.bookSlug || h.book || bookId,
       reference: h.reference,
-      chapter: h.chapter || String(chapterId),
+      chapter: h.chapterNumber || h.chapter || String(chapterId),
       hadithNumber: h.hadithNumber || h.number
     }));
   } catch (error) {
@@ -192,6 +192,16 @@ export async function getRandomAyah(): Promise<AyahData> {
       numberInSurah: 6,
       arabic: "فَإِنَّ مَعَ ٱلْعُسْرِ يُسْرًا"
     };
+  }
+}
+
+export async function getAyah(globalAyahNumber: number): Promise<any> {
+  try {
+    const data = await getJSON(`${QURAN_BASE}/ayah/${globalAyahNumber}`);
+    return data;
+  } catch (error) {
+    console.error(`Error fetching ayah ${globalAyahNumber}:`, error);
+    return null;
   }
 }
 
@@ -288,7 +298,7 @@ export interface HadithBookMetadata {
 
 const hadithBooksMetadata: HadithBookMetadata[] = [
   {
-    id: 'bukhari',
+    id: 'sahih-bukhari',
     name: 'Sahih al-Bukhari',
     arabic: 'صحيح البخاري',
     description: 'The most authentic collection of hadith',
@@ -306,7 +316,7 @@ const hadithBooksMetadata: HadithBookMetadata[] = [
     ]
   },
   {
-    id: 'muslim',
+    id: 'sahih-muslim',
     name: 'Sahih Muslim',
     arabic: 'صحيح مسلم',
     description: 'Second most authentic hadith collection',
