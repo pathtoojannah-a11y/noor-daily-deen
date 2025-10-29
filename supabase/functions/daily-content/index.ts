@@ -6,30 +6,46 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const QURAN_BASE = 'https://quranapi.pages.dev/api';
-const HADITH_BASE = 'https://hadithapi.pages.dev/api';
-const HADITH_FALLBACK = 'https://random-hadith-generator.vercel.app/api/hadiths';
+// Using reliable, tested APIs
+const QURAN_BASE = 'https://api.alquran.cloud/v1';
+const HADITH_PRIMARY = 'https://api.hadith.gading.dev';
+const HADITH_FALLBACK = 'https://random-hadith-generator.vercel.app';
 
 async function getRandomAyah() {
   try {
     const randomSurah = Math.floor(Math.random() * 114) + 1;
-    const res = await fetch(`${QURAN_BASE}/${randomSurah}.json`);
-    const data = await res.json();
+    console.log(`Fetching Quran surah ${randomSurah}`);
     
-    const ayahs = data.ayahs || data.verses || [];
-    if (ayahs.length > 0) {
-      const randomAyah = ayahs[Math.floor(Math.random() * ayahs.length)];
+    const res = await fetch(`${QURAN_BASE}/surah/${randomSurah}/editions/ar.alafasy,en.sahih`, {
+      headers: { 'Accept': 'application/json' }
+    });
+    
+    if (!res.ok) {
+      throw new Error(`Quran API returned ${res.status}`);
+    }
+    
+    const response = await res.json();
+    const data = response.data[1]; // English translation is second edition
+    const arabicData = response.data[0]; // Arabic is first edition
+    
+    if (data?.ayahs && data.ayahs.length > 0) {
+      const randomIndex = Math.floor(Math.random() * data.ayahs.length);
+      const randomAyah = data.ayahs[randomIndex];
+      const arabicAyah = arabicData?.ayahs?.[randomIndex];
+      
+      console.log(`✅ Successfully fetched ayah from ${data.englishName}`);
       return {
-        text: randomAyah.text || randomAyah.translation || '',
+        text: randomAyah.text || '',
         surah: data.englishName || data.name || 'Surah',
-        numberInSurah: randomAyah.numberInSurah || randomAyah.number || null,
-        arabic: randomAyah.arabic || randomAyah.text_ar || randomAyah.arText
+        numberInSurah: randomAyah.numberInSurah || null,
+        arabic: arabicAyah?.text || randomAyah.text
       };
     }
   } catch (error) {
-    console.error('Error fetching ayah:', error);
+    console.error('❌ Error fetching ayah:', error);
   }
   
+  console.log('⚠️ Using fallback ayah');
   return {
     text: "Indeed, with hardship comes ease.",
     surah: "Ash-Sharh",
@@ -39,32 +55,56 @@ async function getRandomAyah() {
 }
 
 async function getRandomHadith() {
+  // Try primary API (Gading.dev - reliable and tested)
   try {
-    const res = await fetch(`${HADITH_BASE}/random`);
+    const collections = ['bukhari', 'muslim', 'abu-dawud', 'tirmidhi'];
+    const randomCollection = collections[Math.floor(Math.random() * collections.length)];
+    const randomNumber = Math.floor(Math.random() * 100) + 1;
+    
+    console.log(`Fetching hadith from ${randomCollection}/${randomNumber}`);
+    
+    const res = await fetch(`${HADITH_PRIMARY}/books/${randomCollection}/${randomNumber}`, {
+      headers: { 'Accept': 'application/json' }
+    });
+    
     if (res.ok) {
-      const data = await res.json();
+      const response = await res.json();
+      const data = response.data;
+      
+      console.log(`✅ Successfully fetched hadith from ${randomCollection}`);
       return {
-        text: data.hadith || data.text || data.hadithText,
-        source: data.book || data.source || 'Hadith Collection'
+        text: data.contents?.en || data.hadith || 'Hadith text unavailable',
+        source: `${data.name || randomCollection.charAt(0).toUpperCase() + randomCollection.slice(1)} ${data.number || randomNumber}`
       };
+    } else {
+      console.warn(`⚠️ Primary hadith API returned ${res.status}`);
     }
   } catch (error) {
-    console.error('Primary hadith API failed:', error);
+    console.error('❌ Primary hadith API failed:', error);
   }
 
+  // Try fallback API
   try {
-    const res = await fetch(HADITH_FALLBACK);
+    console.log('Trying fallback hadith API');
+    const res = await fetch(HADITH_FALLBACK, {
+      headers: { 'Accept': 'application/json' }
+    });
+    
     if (res.ok) {
       const data = await res.json();
+      console.log('✅ Fallback hadith API succeeded');
       return {
-        text: data.hadith || data.text,
-        source: data.book || data.source || 'Hadith Collection'
+        text: data.hadith?.englishNarration || data.hadith?.english || data.text || 'Hadith text unavailable',
+        source: data.hadith?.book || data.source || 'Hadith Collection'
       };
+    } else {
+      console.warn(`⚠️ Fallback hadith API returned ${res.status}`);
     }
   } catch (error) {
-    console.error('Fallback hadith API failed:', error);
+    console.error('❌ Fallback hadith API failed:', error);
   }
 
+  console.log('⚠️ Using fallback hadith');
   return {
     text: "The best of you are those who are best to their families.",
     source: "Tirmidhi"
@@ -178,7 +218,14 @@ serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }), {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('❌ Edge function error:', errorMessage);
+    console.error('Error details:', error);
+    
+    return new Response(JSON.stringify({ 
+      error: errorMessage,
+      details: error instanceof Error ? error.stack : String(error)
+    }), {
       status: 400,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
