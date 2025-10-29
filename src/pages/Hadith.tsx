@@ -5,37 +5,37 @@ import { BookOpen } from 'lucide-react';
 
 const hadithBooks = [
   {
-    id: 'bukhari',
+    id: 'sahih-bukhari',
     name: 'Sahih al-Bukhari',
     description: 'The most authentic collection of hadith',
     arabic: 'صحيح البخاري'
   },
   {
-    id: 'muslim',
+    id: 'sahih-muslim',
     name: 'Sahih Muslim',
     description: 'Second most authentic hadith collection',
     arabic: 'صحيح مسلم'
   },
   {
-    id: 'abudawud',
+    id: 'abu-dawood',
     name: 'Sunan Abi Dawud',
     description: 'Collection focused on Islamic jurisprudence',
     arabic: 'سنن أبي داود'
   },
   {
-    id: 'tirmidhi',
+    id: 'al-tirmidhi',
     name: 'Jami\' at-Tirmidhi',
     description: 'Comprehensive hadith collection',
     arabic: 'جامع الترمذي'
   },
   {
-    id: 'nasai',
+    id: 'sunan-nasai',
     name: 'Sunan an-Nasa\'i',
     description: 'Collection emphasizing authenticity',
     arabic: 'سنن النسائي'
   },
   {
-    id: 'ibnmajah',
+    id: 'ibn-e-majah',
     name: 'Sunan Ibn Majah',
     description: 'One of the six major hadith collections',
     arabic: 'سنن ابن ماجه'

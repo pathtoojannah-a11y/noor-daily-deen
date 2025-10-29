@@ -40,14 +40,15 @@ export async function listHadithBooks() {
 }
 
 export async function listHadithChapters(bookSlug: string) {
+  const slug = encodeURIComponent(bookSlug.trim());
   try {
     const data = await getJSON<{ chapters: any[] }>(
-      `${HADITH_BASE}/${bookSlug}/chapters?apiKey=${HADITH_KEY}`
+      `${HADITH_BASE}/${slug}/chapters?apiKey=${HADITH_KEY}`
     );
     return data.chapters;
   } catch {
     const data = await getJSON<{ chapters: any[] }>(
-      `${HADITH_STATIC}/${bookSlug}/chapters`
+      `${HADITH_STATIC}/${slug}/chapters`
     );
     return data.chapters;
   }
@@ -68,9 +69,12 @@ export async function searchHadith(q: Record<string, string | number | undefined
     }
     return arr;
   } catch {
-    if (q.book && q.chapter != null) {
+    const book = q.book as string | undefined;
+    const chapter = q.chapter as number | undefined;
+    if (book && chapter != null) {
+      const slug = encodeURIComponent(book.trim());
       const data = await getJSON<any>(
-        `${HADITH_STATIC}/${q.book}/chapters/${q.chapter}`
+        `${HADITH_STATIC}/${slug}/chapters/${chapter}`
       );
       if (Array.isArray(data.hadiths?.data)) {
         return data.hadiths.data;
@@ -105,8 +109,17 @@ export async function getDailyHadith(): Promise<HadithData> {
 }
 
 export async function getHadithFromChapter(bookId: string, chapterId: number): Promise<HadithData[]> {
+  const slug = encodeURIComponent(bookId.trim());
+  const params = new URLSearchParams({
+    apiKey: HADITH_KEY,
+    book: slug,
+    chapter: String(chapterId),
+    paginate: '100',
+  });
+  
   try {
-    const data = await searchHadith({ book: bookId, chapter: chapterId });
+    const res = await getJSON<any>(`${HADITH_BASE}/hadiths?${params}`);
+    const data = Array.isArray(res?.hadiths?.data) ? res.hadiths.data : [];
     return data.map((h: any) => ({
       text: h.hadithEnglish || h.hadith || h.text || '',
       arabic: h.hadithArabic || h.arabic,
@@ -326,6 +339,34 @@ const hadithBooksMetadata: HadithBookMetadata[] = [
       { number: 3, name: 'Menstruation', arabic: 'كتاب الحيض', hadithRange: '632-711' },
       { number: 4, name: 'Prayer', arabic: 'كتاب الصلاة', hadithRange: '712-1457' }
     ]
+  },
+  {
+    id: 'abu-dawood',
+    name: 'Sunan Abi Dawud',
+    arabic: 'سنن أبي داود',
+    description: 'Collection focused on Islamic jurisprudence',
+    chapters: []
+  },
+  {
+    id: 'al-tirmidhi',
+    name: 'Jami\' at-Tirmidhi',
+    arabic: 'جامع الترمذي',
+    description: 'Comprehensive hadith collection',
+    chapters: []
+  },
+  {
+    id: 'sunan-nasai',
+    name: 'Sunan an-Nasa\'i',
+    arabic: 'سنن النسائي',
+    description: 'Collection emphasizing authenticity',
+    chapters: []
+  },
+  {
+    id: 'ibn-e-majah',
+    name: 'Sunan Ibn Majah',
+    arabic: 'سنن ابن ماجه',
+    description: 'One of the six major hadith collections',
+    chapters: []
   }
 ];
 

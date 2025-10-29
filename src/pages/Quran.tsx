@@ -25,7 +25,9 @@ const Quran = () => {
   };
 
   const handleSurahClick = async (surahNumber: number) => {
-    const data = await getSurah(surahNumber);
+    const response = await getSurah(surahNumber);
+    // Handle both direct response and nested data structure
+    const data = response?.data ?? response;
     setSelectedSurah(data);
   };
 
@@ -66,18 +68,20 @@ const Quran = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              {selectedSurah.ayahs?.map((ayah: any, index: number) => (
+              {(selectedSurah.ayahs ?? selectedSurah.verses ?? []).map((ayah: any, index: number) => (
                 <div key={index} className="space-y-3 p-4 bg-muted/30 rounded-lg">
-                  <div className="font-arabic text-2xl text-right leading-loose whitespace-pre-wrap">
-                    {ayah.text || ayah.arabic || ayah.text_ar} ﴿{ayah.numberInSurah}﴾
+                  <div className="font-arabic text-2xl text-right leading-relaxed whitespace-pre-wrap">
+                    {ayah.text || ayah.arabic || ayah.text_ar} ﴿{ayah.numberInSurah || ayah.number}﴾
                   </div>
                   {ayah.transliteration && (
                     <div className="text-muted-foreground italic whitespace-pre-wrap">
                       {ayah.transliteration}
                     </div>
                   )}
-                  {ayah.translation && (
-                    <div className="leading-relaxed whitespace-pre-wrap">{ayah.translation}</div>
+                  {(ayah.translation || ayah.text_en) && (
+                    <div className="leading-relaxed whitespace-pre-wrap">
+                      {ayah.translation || ayah.text_en}
+                    </div>
                   )}
                   {ayah.audioUrl && (
                     <Button

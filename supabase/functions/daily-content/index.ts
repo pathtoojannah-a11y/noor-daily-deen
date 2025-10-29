@@ -4,21 +4,30 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'GET, OPTIONS',
 };
 
 const HADITH_KEY = Deno.env.get("HADITH_API_KEY") ?? "";
-const HADITH_BASE = "https://hadithapi.com/public/api";
+const HADITH_BASE = Deno.env.get("HADITH_BASE") ?? "https://hadithapi.com/public/api";
 const HADITH_STATIC = "https://hadithapi.pages.dev/api";
 const RANDOM_HADITH = "https://random-hadith-generator.vercel.app";
-const QURAN_BASE = "https://quranapi.pages.dev/api";
+const QURAN_BASE = Deno.env.get("QURAN_BASE") ?? "https://quranapi.pages.dev/api";
 
 async function getJSON<T>(url: string): Promise<T> {
   const r = await fetch(url, { headers: { accept: "application/json" } });
   if (!r.ok) {
     const body = await r.text().catch(() => "");
-    throw new Error(`Fetch ${url} failed: ${r.status} ${r.statusText} ${body}`);
+    throw { type: "FETCH_ERROR", url, status: r.status, statusText: r.statusText, body };
   }
   return r.json();
+}
+
+function explainError(e: unknown) {
+  if (e instanceof Error) return { message: e.message, stack: e.stack };
+  if (typeof e === 'object' && e !== null) {
+    try { return { raw: JSON.stringify(e) }; } catch { return { raw: String(e) }; }
+  }
+  return { raw: String(e) };
 }
 
 async function getRandomAyah() {
@@ -43,7 +52,7 @@ async function getRandomAyah() {
       };
     }
   } catch (error) {
-    console.error('❌ Error fetching ayah:', error instanceof Error ? error.message : String(error));
+    console.error('❌ Error fetching ayah:', explainError(error));
   }
   
   console.log('⚠️ Using fallback ayah');
@@ -86,7 +95,7 @@ async function getRandomHadith() {
       console.warn(`⚠️ Primary hadith API returned empty data`);
     }
   } catch (error) {
-    console.error('❌ Primary hadith API failed:', error instanceof Error ? error.message : String(error));
+    console.error('❌ Primary hadith API failed:', explainError(error));
   }
 
   // Try random API fallback
@@ -100,7 +109,7 @@ async function getRandomHadith() {
       source: h?.book?.name || h?.bookName || 'Hadith Collection'
     };
   } catch (error) {
-    console.error('❌ Random hadith API failed:', error instanceof Error ? error.message : String(error));
+    console.error('❌ Random hadith API failed:', explainError(error));
   }
 
   console.log('⚠️ Using fallback hadith');
@@ -188,10 +197,38 @@ serve(async (req) => {
       });
     }
 
-    const [ayah, hadith] = await Promise.all([
+    const results = await Promise.allSettled([
       getRandomAyah(),
       getRandomHadith()
     ]);
+
+    const [ayahR, hadithR] = results;
+
+    // Check if any failed
+    const failed = results.find(r => r.status === "rejected");
+    
+    let ayah, hadith;
+    if (ayahR.status === "fulfilled") {
+      ayah = ayahR.value;
+    } else {
+      console.error('Ayah fetch failed:', explainError(ayahR.reason));
+      ayah = {
+        text: "Indeed, with hardship comes ease.",
+        surah: "Ash-Sharh",
+        numberInSurah: 6,
+        arabic: "فَإِنَّ مَعَ ٱلْعُسْرِ يُسْرًا"
+      };
+    }
+
+    if (hadithR.status === "fulfilled") {
+      hadith = hadithR.value;
+    } else {
+      console.error('Hadith fetch failed:', explainError(hadithR.reason));
+      hadith = {
+        text: "The best of you are those who are best to their families.",
+        source: "Tirmidhi"
+      };
+    }
 
     const content = {
       ayah,
@@ -217,15 +254,12 @@ serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    const stack = error instanceof Error ? error.stack : undefined;
-    console.error('❌ Edge function error:', message);
-    if (stack) console.error('Stack:', stack);
+    const errorDetails = explainError(error);
+    console.error('❌ Edge function error:', errorDetails);
     
     return new Response(JSON.stringify({ 
       error: "Edge function error",
-      message,
-      stack
+      ...errorDetails
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
