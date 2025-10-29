@@ -39,24 +39,6 @@ const hadithBooks = [
     name: 'Sunan Ibn Majah',
     description: 'One of the six major hadith collections',
     arabic: 'سنن ابن ماجه'
-  },
-  {
-    id: 'malik',
-    name: 'Muwatta Malik',
-    description: 'Earliest written collection of hadith',
-    arabic: 'موطأ مالك'
-  },
-  {
-    id: 'ahmad',
-    name: 'Musnad Ahmad',
-    description: 'Large collection by Imam Ahmad',
-    arabic: 'مسند أحمد'
-  },
-  {
-    id: 'darimi',
-    name: 'Sunan ad-Darimi',
-    description: 'Early hadith collection',
-    arabic: 'سنن الدارمي'
   }
 ];
 

@@ -3,99 +3,121 @@ export interface HadithData {
   source: string;
   reference?: string;
   chapter?: string;
+  hadithNumber?: number;
 }
 
-interface HadithBook {
+interface FawazHadithBook {
   metadata: {
     name: string;
-    section: string[];
-  };
-  hadiths: Array<{
-    hadithnumber: number;
-    arabicnumber: string;
-    text: string;
-    grades: Array<{ name: string; grade: string }>;
-    reference?: {
-      book: number;
-      hadith: number;
+    section?: {
+      [key: string]: {
+        [key: string]: number[];
+      };
     };
-  }>;
+  };
+  hadiths: {
+    [key: string]: {
+      text: string;
+      grades?: Array<{ name: string; grade: string }>;
+    };
+  };
 }
 
-// List of available hadith books
-const HADITH_BOOKS = [
-  'bukhari', 'muslim', 'abudawud', 'tirmidhi', 'nasai', 
-  'ibnmajah', 'malik', 'ahmad', 'darimi'
-];
+// Available book editions from Fawaz Ahmed API
+const BOOK_EDITIONS = {
+  bukhari: 'eng-sahihbukhari',
+  muslim: 'eng-sahihmuslim',
+  abudawud: 'eng-abudawud',
+  tirmidhi: 'eng-tirmidhi',
+  nasai: 'eng-nasai',
+  ibnmajah: 'eng-ibnmajah'
+};
 
-// Helper: try local JSON first, then fallback to CDN (GitHub via jsDelivr)
-const cdnBase = 'https://cdn.jsdelivr.net/gh/ahmedbaset/hadith-json@main/db';
-async function fetchWithFallback(path: string) {
-  // path example: /by_book/the_9_books/bukhari.json
-  const localUrl = `/hadith${path}`;
-  const cdnUrl = `${cdnBase}${path}`;
-  let res = await fetch(localUrl);
-  if (!res.ok) {
-    res = await fetch(cdnUrl);
+const API_BASE = 'https://cdn.jsdelivr.net/gh/fawazahmed0/hadith-api@1/editions';
+
+// Cache for book data
+const bookCache: { [key: string]: FawazHadithBook } = {};
+
+async function fetchBookData(bookId: string): Promise<FawazHadithBook> {
+  if (bookCache[bookId]) {
+    return bookCache[bookId];
   }
-  if (!res.ok) throw new Error(`Failed to fetch ${path}`);
-  return res.json();
+
+  const edition = BOOK_EDITIONS[bookId as keyof typeof BOOK_EDITIONS];
+  if (!edition) {
+    throw new Error(`Unknown book: ${bookId}`);
+  }
+
+  const response = await fetch(`${API_BASE}/${edition}.json`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch ${bookId}`);
+  }
+
+  const data: FawazHadithBook = await response.json();
+  bookCache[bookId] = data;
+  return data;
 }
 
 // Fetch random hadith from available books
 export async function getDailyHadith(): Promise<HadithData> {
   try {
-    // Pick a random book
-    const randomBook = HADITH_BOOKS[Math.floor(Math.random() * HADITH_BOOKS.length)];
+    const bookIds = Object.keys(BOOK_EDITIONS);
+    const randomBook = bookIds[Math.floor(Math.random() * bookIds.length)];
+    const bookData = await fetchBookData(randomBook);
     
-    // Fetch the book data
-    const bookData: HadithBook = await fetchWithFallback(`/by_book/the_9_books/${randomBook}.json`);
-    
-    // Pick a random hadith from the book
-    const randomIndex = Math.floor(Math.random() * bookData.hadiths.length);
-    const hadith = bookData.hadiths[randomIndex];
+    const hadithKeys = Object.keys(bookData.hadiths);
+    const randomKey = hadithKeys[Math.floor(Math.random() * hadithKeys.length)];
+    const hadith = bookData.hadiths[randomKey];
     
     return {
       text: hadith.text,
-      source: `${bookData.metadata.name} ${hadith.arabicnumber}`,
-      reference: hadith.reference ? `Book ${hadith.reference.book}, Hadith ${hadith.reference.hadith}` : undefined,
-      chapter: bookData.metadata.section?.[0]
+      source: `${bookData.metadata.name} ${randomKey}`,
+      hadithNumber: parseInt(randomKey)
     };
   } catch (error) {
     console.error('Error fetching hadith:', error);
-    // Return a fallback hadith
     return fallbackHadiths[Math.floor(Math.random() * fallbackHadiths.length)];
   }
 }
 
-// Fetch hadith from specific book
-export async function getHadithFromBook(bookName: string): Promise<HadithData[]> {
-  try {
-    const bookData: HadithBook = await fetchWithFallback(`/by_book/the_9_books/${bookName}.json`);
-    
-    return bookData.hadiths.map(h => ({
-      text: h.text,
-      source: `${bookData.metadata.name} ${h.arabicnumber}`,
-      reference: h.reference ? `Book ${h.reference.book}, Hadith ${h.reference.hadith}` : undefined,
-      chapter: bookData.metadata.section?.[0]
-    }));
-  } catch (error) {
-    console.error('Error fetching hadith book:', error);
-    return [];
-  }
-}
-
 // Fetch hadith from specific chapter
-export async function getHadithFromChapter(bookName: string, chapterId: number): Promise<HadithData[]> {
+export async function getHadithFromChapter(bookId: string, chapterId: number): Promise<HadithData[]> {
   try {
-    const bookData: HadithBook = await fetchWithFallback(`/by_chapter/the_9_books/${bookName}/${chapterId}.json`);
+    const bookData = await fetchBookData(bookId);
     
-    return bookData.hadiths.map(h => ({
-      text: h.text,
-      source: `${bookData.metadata.name} ${h.arabicnumber}`,
-      reference: h.reference ? `Book ${h.reference.book}, Hadith ${h.reference.hadith}` : undefined,
-      chapter: bookData.metadata.section?.[0]
-    }));
+    // Get hadith numbers for this chapter
+    const section = bookData.metadata.section;
+    if (!section) {
+      return [];
+    }
+
+    // Find the chapter's hadith numbers
+    let hadithNumbers: number[] = [];
+    for (const sectionKey in section) {
+      const chapters = section[sectionKey];
+      if (chapters[chapterId]) {
+        hadithNumbers = chapters[chapterId];
+        break;
+      }
+    }
+
+    if (hadithNumbers.length === 0) {
+      return [];
+    }
+
+    // Map hadith numbers to hadith data
+    return hadithNumbers
+      .map(num => {
+        const hadith = bookData.hadiths[num.toString()];
+        if (!hadith) return null;
+        
+        return {
+          text: hadith.text,
+          source: `${bookData.metadata.name} ${num}`,
+          hadithNumber: num
+        } as HadithData;
+      })
+      .filter((h): h is HadithData => h !== null);
   } catch (error) {
     console.error('Error fetching hadith chapter:', error);
     return [];
