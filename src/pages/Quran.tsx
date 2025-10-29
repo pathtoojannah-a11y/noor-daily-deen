@@ -3,7 +3,7 @@ import { Layout } from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { BookOpen, Play, Pause } from 'lucide-react';
-import { getSurahList, getSurah, type SurahData } from '@/lib/api/quran';
+import { getSurahList, getSurah, type SurahData } from '@/lib/apis';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const Quran = () => {

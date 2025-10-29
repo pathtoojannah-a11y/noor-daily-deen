@@ -5,9 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowLeft, Volume2, Plus } from 'lucide-react';
-import { getDuasByCategory } from '@/lib/api/adhkar';
+import { getDuasByCategory, type Dua } from '@/lib/apis';
 import { useToast } from '@/hooks/use-toast';
-import type { Dua } from '@/lib/api/adhkar';
 
 const AdhkarCategory = () => {
   const { slug } = useParams<{ slug: string }>();

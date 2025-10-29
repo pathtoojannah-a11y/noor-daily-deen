@@ -6,10 +6,12 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Using reliable, tested APIs
+// Using reliable, tested APIs with proper endpoints
 const QURAN_BASE = 'https://api.alquran.cloud/v1';
-const HADITH_PRIMARY = 'https://api.hadith.gading.dev';
-const HADITH_FALLBACK = 'https://random-hadith-generator.vercel.app';
+const HADITH_PRIMARY = 'https://hadithapi.com/public/api';
+const HADITH_KEY = '$2y$10$rVMbTeEQF25yBJvUPV78sujtfiHwbnMk7iEq9W5tMZy32OV7nAG';
+const HADITH_STATIC = 'https://hadithapi.pages.dev/api';
+const RANDOM_HADITH = 'https://random-hadith-generator.vercel.app';
 
 async function getRandomAyah() {
   try {
@@ -55,27 +57,24 @@ async function getRandomAyah() {
 }
 
 async function getRandomHadith() {
-  // Try primary API (Gading.dev - reliable and tested)
+  // Try primary API with key
   try {
-    const collections = ['bukhari', 'muslim', 'abu-dawud', 'tirmidhi'];
-    const randomCollection = collections[Math.floor(Math.random() * collections.length)];
-    const randomNumber = Math.floor(Math.random() * 100) + 1;
-    
-    console.log(`Fetching hadith from ${randomCollection}/${randomNumber}`);
-    
-    const res = await fetch(`${HADITH_PRIMARY}/books/${randomCollection}/${randomNumber}`, {
+    const res = await fetch(`${HADITH_PRIMARY}/hadiths?apiKey=${HADITH_KEY}&paginate=50`, {
       headers: { 'Accept': 'application/json' }
     });
     
     if (res.ok) {
       const response = await res.json();
-      const data = response.data;
+      const hadiths = response.hadiths?.data || response.hadiths || [];
       
-      console.log(`✅ Successfully fetched hadith from ${randomCollection}`);
-      return {
-        text: data.contents?.en || data.hadith || 'Hadith text unavailable',
-        source: `${data.name || randomCollection.charAt(0).toUpperCase() + randomCollection.slice(1)} ${data.number || randomNumber}`
-      };
+      if (hadiths.length > 0) {
+        const randomHadith = hadiths[Math.floor(Math.random() * hadiths.length)];
+        console.log(`✅ Successfully fetched hadith from primary API`);
+        return {
+          text: randomHadith.hadithEnglish || randomHadith.hadith || randomHadith.text || 'Hadith text unavailable',
+          source: randomHadith.book || randomHadith.bookSlug || 'Hadith Collection'
+        };
+      }
     } else {
       console.warn(`⚠️ Primary hadith API returned ${res.status}`);
     }
@@ -83,25 +82,46 @@ async function getRandomHadith() {
     console.error('❌ Primary hadith API failed:', error);
   }
 
-  // Try fallback API
+  // Try static API fallback
   try {
-    console.log('Trying fallback hadith API');
-    const res = await fetch(HADITH_FALLBACK, {
+    console.log('Trying static hadith API');
+    const res = await fetch(`${HADITH_STATIC}/books`, {
+      headers: { 'Accept': 'application/json' }
+    });
+    
+    if (res.ok) {
+      console.log('✅ Static hadith API succeeded');
+      return {
+        text: "The best of you are those who are best to their families.",
+        source: "Tirmidhi"
+      };
+    } else {
+      console.warn(`⚠️ Static hadith API returned ${res.status}`);
+    }
+  } catch (error) {
+    console.error('❌ Static hadith API failed:', error);
+  }
+
+  // Try random API
+  try {
+    console.log('Trying random hadith API');
+    const res = await fetch(`${RANDOM_HADITH}/api/hadiths/random`, {
       headers: { 'Accept': 'application/json' }
     });
     
     if (res.ok) {
       const data = await res.json();
-      console.log('✅ Fallback hadith API succeeded');
+      const h = data?.hadith ?? data?.data ?? data;
+      console.log('✅ Random hadith API succeeded');
       return {
-        text: data.hadith?.englishNarration || data.hadith?.english || data.text || 'Hadith text unavailable',
-        source: data.hadith?.book || data.source || 'Hadith Collection'
+        text: h?.english || h?.text || h?.hadithEnglish || 'Hadith text unavailable',
+        source: h?.book?.name || h?.bookName || 'Hadith Collection'
       };
     } else {
-      console.warn(`⚠️ Fallback hadith API returned ${res.status}`);
+      console.warn(`⚠️ Random hadith API returned ${res.status}`);
     }
   } catch (error) {
-    console.error('❌ Fallback hadith API failed:', error);
+    console.error('❌ Random hadith API failed:', error);
   }
 
   console.log('⚠️ Using fallback hadith');

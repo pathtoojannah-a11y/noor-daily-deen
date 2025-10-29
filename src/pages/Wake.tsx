@@ -3,8 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Volume2, Check, Clock } from 'lucide-react';
-import { pickDuaFor } from '@/lib/api/adhkar';
-import type { Dua } from '@/lib/api/adhkar';
+import { pickDuaFor, type Dua } from '@/lib/apis';
 
 const Wake = () => {
   const navigate = useNavigate();

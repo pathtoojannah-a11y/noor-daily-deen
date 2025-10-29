@@ -3,7 +3,7 @@ import { Layout } from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowLeft, BookOpen } from 'lucide-react';
-import { getBookMetadata } from '@/lib/api/hadithMetadata';
+import { getBookMetadata } from '@/lib/apis';
 
 const HadithChapters = () => {
   const { bookId } = useParams<{ bookId: string }>();

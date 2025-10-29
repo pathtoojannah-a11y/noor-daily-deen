@@ -5,9 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowLeft, BookOpen } from 'lucide-react';
-import { getHadithFromChapter } from '@/lib/api/hadith';
-import type { HadithData } from '@/lib/api/hadith';
-import { getBookMetadata } from '@/lib/api/hadithMetadata';
+import { getHadithFromChapter, getBookMetadata, type HadithData } from '@/lib/apis';
 
 const HadithBook = () => {
   const { bookId, chapterId } = useParams<{ bookId: string; chapterId: string }>();

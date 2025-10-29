@@ -6,8 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Check, Volume2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { pickDuaFor } from '@/lib/api/adhkar';
-import type { Dua } from '@/lib/api/adhkar';
+import { pickDuaFor, type Dua } from '@/lib/apis';
 import { Badge } from '@/components/ui/badge';
 
 const Bedtime = () => {

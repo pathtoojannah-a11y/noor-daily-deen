@@ -3,8 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Layout } from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { listCategories } from '@/lib/api/adhkar';
-import type { Category } from '@/lib/api/adhkar';
+import { listCategories, type Category } from '@/lib/apis';
 import { BookOpen, Sun, Moon, Clock, Plane, Heart, Leaf } from 'lucide-react';
 
 const iconMap: Record<string, any> = {
