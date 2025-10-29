@@ -8,10 +8,15 @@ const corsHeaders = {
 };
 
 const HADITH_KEY = Deno.env.get("HADITH_API_KEY") ?? "";
-const HADITH_BASE = Deno.env.get("HADITH_BASE") ?? "https://hadithapi.com/public/api";
+const HADITH_KEY_2 = Deno.env.get("HADITH_API_KEY_2") ?? "";
+const QURAN_KEY = Deno.env.get("QURAN_API_KEY") ?? "";
+const DUA_KEY = Deno.env.get("DUA_API_KEY") ?? "";
+
+const HADITH_BASE = "https://hadithapi.com/public/api";
 const HADITH_STATIC = "https://hadithapi.pages.dev/api";
 const RANDOM_HADITH = "https://random-hadith-generator.vercel.app";
-const QURAN_BASE = Deno.env.get("QURAN_BASE") ?? "https://quranapi.pages.dev/api";
+const QURAN_BASE = "https://quranapi.pages.dev/api";
+const DUA_BASE = "https://dua-dhikr-two.vercel.app/api";
 
 async function getJSON<T>(url: string): Promise<T> {
   const r = await fetch(url, { headers: { accept: "application/json" } });
@@ -65,8 +70,10 @@ async function getRandomAyah() {
 }
 
 async function getRandomHadith() {
-  if (!HADITH_KEY) {
-    console.error('❌ Missing HADITH_API_KEY');
+  const apiKey = HADITH_KEY || HADITH_KEY_2;
+  
+  if (!apiKey) {
+    console.warn('⚠️ No HADITH_API_KEY found, using fallback');
     return {
       text: "The best of you are those who are best to their families.",
       source: "Tirmidhi"
@@ -76,20 +83,23 @@ async function getRandomHadith() {
   // Try primary API with key
   try {
     const params = new URLSearchParams({
-      apiKey: HADITH_KEY,
+      apiKey: apiKey,
       book: "sahih-bukhari",
       chapter: "1",
       paginate: "50",
     });
+    console.log(`Fetching hadith from ${HADITH_BASE}`);
     const res: any = await getJSON(`${HADITH_BASE}/hadiths?${params}`);
     const hadiths = Array.isArray(res?.hadiths?.data) ? res.hadiths.data : [];
     
     if (hadiths.length > 0) {
       const randomHadith = hadiths[Math.floor(Math.random() * hadiths.length)];
-      console.log(`✅ Successfully fetched hadith from primary API`);
+      console.log(`✅ Successfully fetched hadith from primary API with key`);
       return {
-        text: randomHadith.hadithEnglish || randomHadith.hadith || randomHadith.text || 'Hadith text unavailable',
-        source: randomHadith.bookSlug || randomHadith.book || 'Sahih Bukhari'
+        text: randomHadith.hadithEnglish || randomHadith.hadith || randomHadith.text || '',
+        arabic: randomHadith.hadithArabic || randomHadith.arabic || '',
+        source: randomHadith.bookSlug || randomHadith.book || 'Sahih Bukhari',
+        reference: randomHadith.reference || randomHadith.hadithNumber || ''
       };
     } else {
       console.warn(`⚠️ Primary hadith API returned empty data`);
@@ -100,45 +110,82 @@ async function getRandomHadith() {
 
   // Try random API fallback
   try {
-    console.log('Trying random hadith API');
+    console.log('Trying random hadith API fallback');
     const res: any = await getJSON(`${RANDOM_HADITH}/api/hadiths/random`);
     const h = res?.hadith ?? res?.data ?? res;
     console.log('✅ Random hadith API succeeded');
     return {
-      text: h?.english || h?.text || h?.hadithEnglish || 'Hadith text unavailable',
-      source: h?.book?.name || h?.bookName || 'Hadith Collection'
+      text: h?.english || h?.text || h?.hadithEnglish || '',
+      arabic: h?.arabic || h?.hadithArabic || '',
+      source: h?.book?.name || h?.bookName || 'Hadith Collection',
+      reference: h?.reference || ''
     };
   } catch (error) {
-    console.error('❌ Random hadith API failed:', explainError(error));
+    console.error('❌ Random hadith API fallback failed:', explainError(error));
   }
 
-  console.log('⚠️ Using fallback hadith');
+  console.log('⚠️ Using static fallback hadith');
   return {
     text: "The best of you are those who are best to their families.",
-    source: "Tirmidhi"
+    arabic: "خَيْرُكُمْ خَيْرُكُمْ لِأَهْلِهِ",
+    source: "Tirmidhi",
+    reference: "Jami` at-Tirmidhi 3895"
   };
 }
 
-function getRandomDua() {
+async function getRandomDua() {
   const hour = new Date().getUTCHours();
+  const timeSlot = hour < 12 ? 'morning' : hour < 18 ? 'evening' : 'bedtime';
+  
+  // Try API first if key is available
+  if (DUA_KEY) {
+    try {
+      console.log(`Fetching ${timeSlot} duas from API`);
+      const res: any = await getJSON(`${DUA_BASE}/duas?category=${timeSlot}`);
+      const duas = res?.duas ?? res?.data ?? [];
+      
+      if (duas.length > 0) {
+        const randomDua = duas[Math.floor(Math.random() * duas.length)];
+        console.log(`✅ Successfully fetched dua from API`);
+        return {
+          type: timeSlot,
+          textAr: randomDua.arabic || randomDua.ar || '',
+          textEn: randomDua.translation || randomDua.en || '',
+          transliteration: randomDua.transliteration || randomDua.translit || '',
+          source: randomDua.source || randomDua.reference || ''
+        };
+      }
+    } catch (error) {
+      console.warn('⚠️ Dua API failed, using fallback:', explainError(error));
+    }
+  }
+  
+  // Fallback static duas
   const duas = {
-    morning: [
-      {
-        type: 'morning',
-        textAr: 'أَصْبَحْنَا وَأَصْبَحَ الْمُلْكُ لِلَّهِ، وَالْحَمْدُ لِلَّهِ',
-        textEn: 'We have reached the morning and with it all sovereignty belongs to Allah. Praise is to Allah.'
-      }
-    ],
-    evening: [
-      {
-        type: 'evening',
-        textAr: 'اللَّهُمَّ بِكَ أَمْسَيْنَا',
-        textEn: 'O Allah, by You we enter the evening...'
-      }
-    ]
+    morning: {
+      type: 'morning',
+      textAr: 'أَصْبَحْنَا وَأَصْبَحَ الْمُلْكُ لِلَّهِ، وَالْحَمْدُ لِلَّهِ',
+      textEn: 'We have reached the morning and with it all sovereignty belongs to Allah. Praise is to Allah.',
+      transliteration: 'Aṣbaḥnā wa aṣbaḥa l-mulku lillāh, wal-ḥamdu lillāh',
+      source: 'Muslim'
+    },
+    evening: {
+      type: 'evening',
+      textAr: 'أَمْسَيْنَا وَأَمْسَى الْمُلْكُ لِلَّهِ، وَالْحَمْدُ لِلَّهِ',
+      textEn: 'We have reached the evening and with it all sovereignty belongs to Allah. Praise is to Allah.',
+      transliteration: 'Amsaynā wa amsā l-mulku lillāh, wal-ḥamdu lillāh',
+      source: 'Muslim'
+    },
+    bedtime: {
+      type: 'bedtime',
+      textAr: 'بِاسْمِكَ اللَّهُمَّ أَمُوتُ وَأَحْيَا',
+      textEn: 'In Your name O Allah, I die and I live.',
+      transliteration: 'Bismika Allāhumma amūtu wa aḥyā',
+      source: 'Bukhari'
+    }
   };
-  const pool = hour < 12 ? duas.morning : duas.evening;
-  return pool[0];
+  
+  return duas[timeSlot as keyof typeof duas];
 }
 
 function getRandomDhikr() {

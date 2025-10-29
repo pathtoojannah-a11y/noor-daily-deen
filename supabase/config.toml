@@ -1,1 +1,4 @@
 project_id = "zespnibucteismnreika"
+
+[functions.daily-content]
+verify_jwt = true
