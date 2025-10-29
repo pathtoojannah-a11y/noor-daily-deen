@@ -1,3 +1,5 @@
+import { API_ENDPOINTS, fetchWithFallback } from './apiConfig';
+
 export interface DuaData {
   textAr: string;
   textEn: string;
@@ -5,8 +7,6 @@ export interface DuaData {
   transliteration?: string;
   benefits?: string;
 }
-
-const DUA_BASE = 'https://dua-dhikr-two.vercel.app/api';
 
 // Morning duas
 const morning: DuaData[] = [
@@ -83,29 +83,25 @@ export function getDuaBySlot(slot: 'morning' | 'evening' | 'bedtime'): DuaData {
 // Fetch duas from API (with fallback to local data)
 export async function fetchDuas(category?: string): Promise<DuaData[]> {
   try {
-    const url = category ? `${DUA_BASE}/duas?category=${category}` : `${DUA_BASE}/duas`;
-    const res = await fetch(url);
-    if (res.ok) {
-      const data = await res.json();
-      return data.duas || data;
-    }
+    const url = category 
+      ? `${API_ENDPOINTS.DUA_BASE}/duas?category=${category}` 
+      : `${API_ENDPOINTS.DUA_BASE}/duas`;
+    
+    const data = await fetchWithFallback(url);
+    return data.duas || data;
   } catch (error) {
     console.error('Error fetching duas from API:', error);
+    // Fallback to local data
+    return [...morning, ...evening, ...bedtime];
   }
-  
-  // Fallback to local data
-  return [...morning, ...evening, ...bedtime];
 }
 
 export async function getDuaCategories(): Promise<string[]> {
   try {
-    const res = await fetch(`${DUA_BASE}/categories`);
-    if (res.ok) {
-      const data = await res.json();
-      return data.categories || [];
-    }
+    const data = await fetchWithFallback(`${API_ENDPOINTS.DUA_BASE}/categories`);
+    return data.categories || [];
   } catch (error) {
     console.error('Error fetching dua categories:', error);
+    return ['morning', 'evening', 'bedtime', 'gratitude', 'protection', 'forgiveness'];
   }
-  return ['morning', 'evening', 'bedtime', 'gratitude', 'protection', 'forgiveness'];
 }

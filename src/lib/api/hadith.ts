@@ -1,3 +1,5 @@
+import { API_ENDPOINTS, fetchWithFallback } from './apiConfig';
+
 export interface HadithData {
   text: string;
   source: string;
@@ -7,65 +9,26 @@ export interface HadithData {
   isStory?: boolean;
 }
 
-const HADITH_BASE = 'https://hadithapi.pages.dev/api';
-const HADITH_FALLBACK = 'https://random-hadith-generator.vercel.app/api/hadiths';
-const HADITH_KEYED = 'https://hadithapi.com/api/hadiths/?apiKey=$2y$10$rVMbTeEQF25yBJvUPV78sujtfiHwbnMk7iEq9W5tMZy32OV7nAG';
-
 // Fetch daily hadith with fallback logic
 export async function getDailyHadith(): Promise<HadithData> {
   try {
-    // Try primary API
-    const res = await fetch(`${HADITH_BASE}/random`);
-    if (res.ok) {
-      const data = await res.json();
-      return {
-        text: data.hadith || data.text || data.hadithText,
-        source: data.book || data.source || 'Hadith Collection',
-        reference: data.reference || `${data.book} ${data.hadithNumber || ''}`,
-        hadithNumber: data.hadithNumber || data.number
-      };
-    }
+    const data = await fetchWithFallback(
+      `${API_ENDPOINTS.HADITH_BASE}/random`,
+      [API_ENDPOINTS.HADITH_FALLBACK, API_ENDPOINTS.HADITH_KEYED],
+      { timeout: 5000 }
+    );
+    
+    return {
+      text: data.hadith || data.text || data.hadithText || data.hadithEnglish,
+      source: data.book || data.source || data.bookSlug || 'Hadith Collection',
+      reference: data.reference || `${data.book || ''} ${data.hadithNumber || ''}`.trim(),
+      hadithNumber: data.hadithNumber || data.number
+    };
   } catch (error) {
-    console.error('Primary hadith API failed:', error);
+    console.error('All hadith APIs failed:', error);
+    // Return fallback from local data
+    return fallbackHadiths[Math.floor(Math.random() * fallbackHadiths.length)];
   }
-
-  try {
-    // Try fallback API
-    const res = await fetch(HADITH_FALLBACK);
-    if (res.ok) {
-      const data = await res.json();
-      return {
-        text: data.hadith || data.text,
-        source: data.book || data.source || 'Hadith Collection',
-        reference: data.reference
-      };
-    }
-  } catch (error) {
-    console.error('Fallback hadith API failed:', error);
-  }
-
-  try {
-    // Try keyed API
-    const res = await fetch(HADITH_KEYED);
-    if (res.ok) {
-      const data = await res.json();
-      const hadiths = data.hadiths || [];
-      if (hadiths.length > 0) {
-        const hadith = hadiths[Math.floor(Math.random() * hadiths.length)];
-        return {
-          text: hadith.hadithText || hadith.text,
-          source: hadith.book || 'Hadith Collection',
-          reference: hadith.reference,
-          hadithNumber: hadith.hadithNumber
-        };
-      }
-    }
-  } catch (error) {
-    console.error('Keyed hadith API failed:', error);
-  }
-
-  // Return fallback
-  return fallbackHadiths[Math.floor(Math.random() * fallbackHadiths.length)];
 }
 
 // Get hadith stories (longer narrations)
@@ -78,42 +41,36 @@ export async function getHadithStory(): Promise<HadithData> {
 // Fetch hadiths from specific book
 export async function getHadithsFromBook(bookName: string, limit = 10): Promise<HadithData[]> {
   try {
-    const res = await fetch(`${HADITH_BASE}/${bookName}?limit=${limit}`);
-    if (res.ok) {
-      const data = await res.json();
-      const hadiths = data.hadiths || [];
-      return hadiths.map((h: any) => ({
-        text: h.hadith || h.text,
-        source: h.book || bookName,
-        reference: h.reference,
-        hadithNumber: h.hadithNumber
-      }));
-    }
+    const data = await fetchWithFallback(`${API_ENDPOINTS.HADITH_BASE}/${bookName}?limit=${limit}`);
+    const hadiths = data.hadiths || [];
+    return hadiths.map((h: any) => ({
+      text: h.hadith || h.text,
+      source: h.book || bookName,
+      reference: h.reference,
+      hadithNumber: h.hadithNumber
+    }));
   } catch (error) {
     console.error(`Error fetching hadiths from ${bookName}:`, error);
+    return [];
   }
-  return [];
 }
 
 // Fetch hadith from specific chapter
 export async function getHadithFromChapter(bookId: string, chapterId: number): Promise<HadithData[]> {
   try {
-    const res = await fetch(`${HADITH_BASE}/${bookId}/${chapterId}`);
-    if (res.ok) {
-      const data = await res.json();
-      const hadiths = data.hadiths || [];
-      return hadiths.map((h: any) => ({
-        text: h.hadith || h.text,
-        source: h.book || bookId,
-        reference: h.reference,
-        chapter: h.chapter,
-        hadithNumber: h.hadithNumber
-      }));
-    }
+    const data = await fetchWithFallback(`${API_ENDPOINTS.HADITH_BASE}/${bookId}/${chapterId}`);
+    const hadiths = data.hadiths || [];
+    return hadiths.map((h: any) => ({
+      text: h.hadith || h.text,
+      source: h.book || bookId,
+      reference: h.reference,
+      chapter: h.chapter,
+      hadithNumber: h.hadithNumber
+    }));
   } catch (error) {
     console.error('Error fetching hadith chapter:', error);
+    return [];
   }
-  return [];
 }
 
 export const fallbackHadiths: HadithData[] = [

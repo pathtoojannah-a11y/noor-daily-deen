@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Layout } from '@/components/Layout';
 import { DailyCard } from '@/components/DailyCard';
+import { DhikrCounter } from '@/components/DhikrCounter';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { BookOpen, Heart, Sparkles, Repeat, MessageSquare, Flame } from 'lucide-react';
+import { BookOpen, Heart, Sparkles, MessageSquare, Flame } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -273,27 +274,24 @@ const Today = () => {
           <p className="text-lg text-foreground leading-relaxed">{content?.dua.textEn}</p>
         </DailyCard>
 
-        {/* Dhikr Card */}
-        <DailyCard
-          title="Dhikr"
-          icon={<Repeat className="w-6 h-6" />}
-          completed={progress.dhikr_done}
-        >
-          <p className="text-xl text-center text-foreground mb-4">{content?.dhikr.text}</p>
-          <div className="text-center space-y-3">
-            <div className="text-3xl font-bold text-primary">
-              {progress.dhikr_count} / {content?.dhikr.target}
-            </div>
-            <Button
-              onClick={incrementDhikr}
-              size="lg"
-              className="w-full bg-gradient-to-r from-primary to-primary/90"
-              disabled={progress.dhikr_done}
-            >
-              {progress.dhikr_done ? 'Completed!' : 'Tap to Count'}
-            </Button>
-          </div>
-        </DailyCard>
+        {/* Dhikr Counter */}
+        <DhikrCounter 
+          onComplete={async () => {
+            if (userId) {
+              const today = new Date().toISOString().split('T')[0];
+              await supabase
+                .from('user_progress')
+                .upsert({
+                  user_id: userId,
+                  date: today,
+                  dhikr_done: true,
+                  dhikr_count: 101, // 33 + 33 + 34 + 1
+                });
+              setProgress({ ...progress, dhikr_done: true, dhikr_count: 101 });
+              calculateStreak(userId);
+            }
+          }} 
+        />
 
         {/* Reflection Card */}
         <DailyCard
