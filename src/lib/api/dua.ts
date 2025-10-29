@@ -1,4 +1,4 @@
-import { API_ENDPOINTS, fetchWithFallback } from './apiConfig';
+import { API_ENDPOINTS, fetchWithFallback } from '../apiConfig';
 
 export interface DuaData {
   textAr: string;
