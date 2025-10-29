@@ -6,51 +6,64 @@ export interface AyahData {
   audioUrl?: string;
 }
 
-export async function getRandomAyahFromCustomApi(): Promise<AyahData> {
-  const base = import.meta.env.VITE_QURAN_BASE || 'https://quran-api-one-gamma.vercel.app/api/quran';
-  
-  try {
-    const res = await fetch(base, { cache: 'no-store' });
-    const json = await res.json();
+export interface SurahData {
+  number: number;
+  name: string;
+  englishName: string;
+  englishNameTranslation: string;
+  numberOfAyahs: number;
+  revelationType: string;
+}
 
-    // Handle schemas like: { data: { surahs: [ { name, ayahs: [ { text, numberInSurah, ... } ] } ] } }
-    const surahs = json?.data?.surahs || json?.surahs;
-    if (Array.isArray(surahs) && surahs.length) {
-      const s = surahs[Math.floor(Math.random() * surahs.length)];
-      const ayahs = s.ayahs || s.verses || [];
-      if (ayahs.length > 0) {
-        const a = ayahs[Math.floor(Math.random() * ayahs.length)];
-        return {
-          text: a.text ?? a.enText ?? a.translation ?? '',
-          surah: s.englishName ?? s.name ?? 'Surah',
-          numberInSurah: a.numberInSurah ?? a.number ?? null,
-          arabic: a.arText ?? a.arabic ?? undefined,
-          audioUrl: a.audio ?? undefined
-        };
-      }
-    }
+const QURAN_BASE = 'https://quranapi.pages.dev/api';
+
+export async function getRandomAyah(): Promise<AyahData> {
+  try {
+    // Get random surah (1-114)
+    const randomSurah = Math.floor(Math.random() * 114) + 1;
+    const res = await fetch(`${QURAN_BASE}/${randomSurah}.json`);
+    const data = await res.json();
     
-    // Fallback shape: single ayah object
-    const a = json?.data?.ayah || json?.ayah;
-    if (a) {
+    const ayahs = data.ayahs || data.verses || [];
+    if (ayahs.length > 0) {
+      const randomAyah = ayahs[Math.floor(Math.random() * ayahs.length)];
       return {
-        text: a.text,
-        surah: a.surah?.englishName ?? a.surah?.name ?? 'Surah',
-        numberInSurah: a.numberInSurah ?? null,
-        arabic: a.arText ?? undefined,
-        audioUrl: a.audio ?? undefined
+        text: randomAyah.text || randomAyah.translation || '',
+        surah: data.englishName || data.name || 'Surah',
+        numberInSurah: randomAyah.numberInSurah || randomAyah.number || null,
+        arabic: randomAyah.arabic || randomAyah.text_ar || randomAyah.arText,
+        audioUrl: `/audio/alafasy/${randomSurah}/${randomAyah.numberInSurah}.mp3`
       };
     }
     
-    throw new Error('Unexpected Qur\'an API shape');
+    throw new Error('No ayahs found');
   } catch (error) {
     console.error('Error fetching Qur\'an ayah:', error);
-    // Fallback ayah
     return {
       text: "Indeed, with hardship comes ease.",
       surah: "Ash-Sharh",
       numberInSurah: 6,
       arabic: "فَإِنَّ مَعَ ٱلْعُسْرِ يُسْرًا"
     };
+  }
+}
+
+export async function getSurahList(): Promise<SurahData[]> {
+  try {
+    const res = await fetch(`${QURAN_BASE}/surah-list.json`);
+    return await res.json();
+  } catch (error) {
+    console.error('Error fetching surah list:', error);
+    return [];
+  }
+}
+
+export async function getSurah(surahNumber: number): Promise<any> {
+  try {
+    const res = await fetch(`${QURAN_BASE}/${surahNumber}.json`);
+    return await res.json();
+  } catch (error) {
+    console.error(`Error fetching surah ${surahNumber}:`, error);
+    return null;
   }
 }

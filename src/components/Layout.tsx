@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, BarChart3, BookText, Settings, LogOut, Book, Bell } from 'lucide-react';
+import { Home, BarChart3, BookOpen, Settings, LogOut, Book, Bell, BookText } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -25,10 +25,10 @@ export const Layout = ({ children }: LayoutProps) => {
 
   const navItems = [
     { path: '/today', icon: Home, label: 'Today' },
-    { path: '/notifications', icon: Bell, label: 'Times' },
-    { path: '/dashboard', icon: BarChart3, label: 'Dashboard' },
+    { path: '/quran', icon: BookOpen, label: 'Qur\'an' },
+    { path: '/hadith', icon: BookText, label: 'Hadith' },
     { path: '/adhkar', icon: Book, label: 'Adhkār' },
-    { path: '/settings', icon: Settings, label: 'Settings' },
+    { path: '/dashboard', icon: BarChart3, label: 'Stats' },
   ];
 
   return (

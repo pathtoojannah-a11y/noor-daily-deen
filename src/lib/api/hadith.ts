@@ -4,124 +4,116 @@ export interface HadithData {
   reference?: string;
   chapter?: string;
   hadithNumber?: number;
+  isStory?: boolean;
 }
 
-interface FawazHadithBook {
-  metadata: {
-    name: string;
-    section?: {
-      [key: string]: {
-        [key: string]: number[];
-      };
-    };
-  };
-  hadiths: {
-    [key: string]: {
-      text: string;
-      grades?: Array<{ name: string; grade: string }>;
-    };
-  };
-}
+const HADITH_BASE = 'https://hadithapi.pages.dev/api';
+const HADITH_FALLBACK = 'https://random-hadith-generator.vercel.app/api/hadiths';
+const HADITH_KEYED = 'https://hadithapi.com/api/hadiths/?apiKey=$2y$10$rVMbTeEQF25yBJvUPV78sujtfiHwbnMk7iEq9W5tMZy32OV7nAG';
 
-// Available book editions from Fawaz Ahmed API
-const BOOK_EDITIONS = {
-  bukhari: 'eng-sahihbukhari',
-  muslim: 'eng-sahihmuslim',
-  abudawud: 'eng-abudawud',
-  tirmidhi: 'eng-tirmidhi',
-  nasai: 'eng-nasai',
-  ibnmajah: 'eng-ibnmajah'
-};
-
-const API_BASE = 'https://cdn.jsdelivr.net/gh/fawazahmed0/hadith-api@1/editions';
-
-// Cache for book data
-const bookCache: { [key: string]: FawazHadithBook } = {};
-
-async function fetchBookData(bookId: string): Promise<FawazHadithBook> {
-  if (bookCache[bookId]) {
-    return bookCache[bookId];
-  }
-
-  const edition = BOOK_EDITIONS[bookId as keyof typeof BOOK_EDITIONS];
-  if (!edition) {
-    throw new Error(`Unknown book: ${bookId}`);
-  }
-
-  const response = await fetch(`${API_BASE}/${edition}.json`);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch ${bookId}`);
-  }
-
-  const data: FawazHadithBook = await response.json();
-  bookCache[bookId] = data;
-  return data;
-}
-
-// Fetch random hadith from available books
+// Fetch daily hadith with fallback logic
 export async function getDailyHadith(): Promise<HadithData> {
   try {
-    const bookIds = Object.keys(BOOK_EDITIONS);
-    const randomBook = bookIds[Math.floor(Math.random() * bookIds.length)];
-    const bookData = await fetchBookData(randomBook);
-    
-    const hadithKeys = Object.keys(bookData.hadiths);
-    const randomKey = hadithKeys[Math.floor(Math.random() * hadithKeys.length)];
-    const hadith = bookData.hadiths[randomKey];
-    
-    return {
-      text: hadith.text,
-      source: `${bookData.metadata.name} ${randomKey}`,
-      hadithNumber: parseInt(randomKey)
-    };
+    // Try primary API
+    const res = await fetch(`${HADITH_BASE}/random`);
+    if (res.ok) {
+      const data = await res.json();
+      return {
+        text: data.hadith || data.text || data.hadithText,
+        source: data.book || data.source || 'Hadith Collection',
+        reference: data.reference || `${data.book} ${data.hadithNumber || ''}`,
+        hadithNumber: data.hadithNumber || data.number
+      };
+    }
   } catch (error) {
-    console.error('Error fetching hadith:', error);
-    return fallbackHadiths[Math.floor(Math.random() * fallbackHadiths.length)];
+    console.error('Primary hadith API failed:', error);
   }
+
+  try {
+    // Try fallback API
+    const res = await fetch(HADITH_FALLBACK);
+    if (res.ok) {
+      const data = await res.json();
+      return {
+        text: data.hadith || data.text,
+        source: data.book || data.source || 'Hadith Collection',
+        reference: data.reference
+      };
+    }
+  } catch (error) {
+    console.error('Fallback hadith API failed:', error);
+  }
+
+  try {
+    // Try keyed API
+    const res = await fetch(HADITH_KEYED);
+    if (res.ok) {
+      const data = await res.json();
+      const hadiths = data.hadiths || [];
+      if (hadiths.length > 0) {
+        const hadith = hadiths[Math.floor(Math.random() * hadiths.length)];
+        return {
+          text: hadith.hadithText || hadith.text,
+          source: hadith.book || 'Hadith Collection',
+          reference: hadith.reference,
+          hadithNumber: hadith.hadithNumber
+        };
+      }
+    }
+  } catch (error) {
+    console.error('Keyed hadith API failed:', error);
+  }
+
+  // Return fallback
+  return fallbackHadiths[Math.floor(Math.random() * fallbackHadiths.length)];
+}
+
+// Get hadith stories (longer narrations)
+export async function getHadithStory(): Promise<HadithData> {
+  // Return one of the longer story hadiths
+  const stories = fallbackHadiths.filter(h => h.text.length > 300);
+  return stories[Math.floor(Math.random() * stories.length)];
+}
+
+// Fetch hadiths from specific book
+export async function getHadithsFromBook(bookName: string, limit = 10): Promise<HadithData[]> {
+  try {
+    const res = await fetch(`${HADITH_BASE}/${bookName}?limit=${limit}`);
+    if (res.ok) {
+      const data = await res.json();
+      const hadiths = data.hadiths || [];
+      return hadiths.map((h: any) => ({
+        text: h.hadith || h.text,
+        source: h.book || bookName,
+        reference: h.reference,
+        hadithNumber: h.hadithNumber
+      }));
+    }
+  } catch (error) {
+    console.error(`Error fetching hadiths from ${bookName}:`, error);
+  }
+  return [];
 }
 
 // Fetch hadith from specific chapter
 export async function getHadithFromChapter(bookId: string, chapterId: number): Promise<HadithData[]> {
   try {
-    const bookData = await fetchBookData(bookId);
-    
-    // Get hadith numbers for this chapter
-    const section = bookData.metadata.section;
-    if (!section) {
-      return [];
+    const res = await fetch(`${HADITH_BASE}/${bookId}/${chapterId}`);
+    if (res.ok) {
+      const data = await res.json();
+      const hadiths = data.hadiths || [];
+      return hadiths.map((h: any) => ({
+        text: h.hadith || h.text,
+        source: h.book || bookId,
+        reference: h.reference,
+        chapter: h.chapter,
+        hadithNumber: h.hadithNumber
+      }));
     }
-
-    // Find the chapter's hadith numbers
-    let hadithNumbers: number[] = [];
-    for (const sectionKey in section) {
-      const chapters = section[sectionKey];
-      if (chapters[chapterId]) {
-        hadithNumbers = chapters[chapterId];
-        break;
-      }
-    }
-
-    if (hadithNumbers.length === 0) {
-      return [];
-    }
-
-    // Map hadith numbers to hadith data
-    return hadithNumbers
-      .map(num => {
-        const hadith = bookData.hadiths[num.toString()];
-        if (!hadith) return null;
-        
-        return {
-          text: hadith.text,
-          source: `${bookData.metadata.name} ${num}`,
-          hadithNumber: num
-        } as HadithData;
-      })
-      .filter((h): h is HadithData => h !== null);
   } catch (error) {
     console.error('Error fetching hadith chapter:', error);
-    return [];
   }
+  return [];
 }
 
 export const fallbackHadiths: HadithData[] = [

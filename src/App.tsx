@@ -12,6 +12,7 @@ import Wake from "./pages/Wake";
 import Bedtime from "./pages/Bedtime";
 import Adhkar from "./pages/Adhkar";
 import AdhkarCategory from "./pages/AdhkarCategory";
+import Quran from "./pages/Quran";
 import Hadith from "./pages/Hadith";
 import HadithChapters from "./pages/HadithChapters";
 import HadithBook from "./pages/HadithBook";
@@ -36,6 +37,7 @@ const App = () => (
         <Route path="/bedtime" element={<Bedtime />} />
         <Route path="/adhkar" element={<Adhkar />} />
         <Route path="/adhkar/:slug" element={<AdhkarCategory />} />
+        <Route path="/quran" element={<Quran />} />
         <Route path="/hadith" element={<Hadith />} />
         <Route path="/hadith/:bookId" element={<HadithChapters />} />
         <Route path="/hadith/:bookId/chapter/:chapterId" element={<HadithBook />} />
